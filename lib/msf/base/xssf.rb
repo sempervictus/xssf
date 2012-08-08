@@ -1,10 +1,16 @@
 #
 # XSSF management
 #
+require 'msf/base/xssf/xssftunnel'
+require 'msf/base/xssf/xssfdatabase'
+require 'msf/base/xssf/xssfgui'
+require 'msf/base/xssf/xssfmaster'
+require 'msf/base/xssf/xssfserver'
+require 'msf/base/xssf/webrickpatches'
 module Msf
 	module Xssf
 
-		XSSF_VERSION	= '2.1'
+		XSSF_VERSION	= '2.2'
 		
 		### CONSTANTS ###
 		SERVER_PORT		= 8888
@@ -72,10 +78,3 @@ end
 
 
 require 'msf/base/xssf/xssfbanner'
-require 'msf/base/xssf/xssftunnel'
-require 'msf/base/xssf/xssfdatabase'
-require 'msf/base/xssf/xssfgui'
-require 'msf/base/xssf/xssfmaster'
-require 'msf/base/xssf/xssfserver'
-require 'msf/base/xssf/webrickpatches'
-
