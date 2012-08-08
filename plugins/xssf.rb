@@ -1,75 +1,14 @@
+
+require "#{File.join(File.dirname(__FILE__),"xssf","lib","xssf")}"
+
 module Msf
 
 	# This plugin manages a new XSS framework integrated to Metasploit
 	class Plugin::Xssf < Msf::Plugin
 		include Msf::Xssf::XssfMaster
-		
-		#
-		# Called when an instance of the plugin is created.
-		#
-		def initialize(framework, opts)
-			super
-
-			clean_database;	Msf::Xssf::AUTO_ATTACKS.clear
-
-			@DefaultPort = Msf::Xssf::SERVER_PORT;		@DefaultUri  = Msf::Xssf::SERVER_URI;	@defaultPublic = false;	@defaultMode = 'Normal';
-
-			# Check if parameters are correct if entered
-			opts['Port'].to_s 	=~ /^(6553[0-5]|655[0-2]\d|65[0-4]\d\d|6[0-4]\d{3}|[1-5]\d{4}|[1-9]\d{0,3}|0)$/ ? port = Integer(opts['Port']) : port = @DefaultPort
-			opts['Uri'].to_s  	=~ /^\/?([a-zA-Z0-9\-\._\?\,\'\/\\\+&amp;%\$#\=~])+$/ ? uri = opts['Uri'].to_s : uri = @DefaultUri
-			
-			opts['Public'].to_s =~ /^true$/ ? Msf::Xssf::XSSF_PUBLIC[0] = true : Msf::Xssf::XSSF_PUBLIC[0] = @DefaultPublic
-			
-			opts['Mode'].to_s =~ /^(Quiet|Normal|Verbose|Debug)$/i ? Msf::Xssf::XSSF_MODE[0] = $1 : Msf::Xssf::XSSF_MODE[0] = @DefaultMode
-			
-			uri = '/' + uri if (uri[0].chr  != "/")
-			uri = uri + '/' if (uri[-1].chr != "/")
-			
-			if (not framework.db.active)
-				print_error("The database backend has not been initialized ...")
-				print_status("Please connect MSF to an installed database before loading XSSF !")
-				raise PluginLoadError.new("Failed to connect to the database.")
-			end
-
-			framework.plugins.each { |p| raise PluginLoadError.new("This plugin should not be loaded more than once") if (p.class == Msf::Plugin::Xssf)	}
-			
-			begin
-				raise "Database Busy..." if not start(port, uri)
-				add_console_dispatcher(ConsoleCommandDispatcher)
-				print_error("Your Ruby version is #{RUBY_VERSION.to_s}. Make sure your version is up-to-date with the last non-vulnerable version before using XSSF!\n\n")
-				print_line("%cya" + Xssf::XssfBanner.to_s + "%clr\n\n")
-
-				print_good("Please use command 'xssf_urls' to see useful XSSF URLs")
-			rescue
-				raise PluginLoadError.new("Error starting server: #{$!}")
-			end
-		end
-
-		#
-		# Removes the console menus created by the plugin
-		#
-		def cleanup
-			stop
-			remove_console_dispatcher('xssf')
-		end
-		
-		#
-		# This method returns a short, friendly name for the plugin.
-		#
-		def name
-			"xssf"
-		end
-
-		#
-		# Returns description of the plugin (60 chars max)
-		#
-		def desc
-			"XSS Framework managing XSS modules"
-		end
-
-
+	
 		# This class implements a sample console command dispatcher.
-		class ConsoleCommandDispatcher
+		class XssfCommandDispatcher
 			include Msf::Ui::Console::CommandDispatcher
 			include Msf::Xssf::XssfMaster
 
@@ -319,8 +258,80 @@ module Msf
 			def cmd_xssf_servers		(*args);	show_table("Servers", DBManager::XssfServer);																																																									end;
 			def cmd_xssf_victims		(*args);	show_table("Victims", DBManager::XssfVictim, ["1 = 1"], ["first_request", "last_request", "tunneled", "current_attack_url", "location", "os_name", "os_version", "arch"]);				print_status("Use xssf_information [VictimID] to see more information about a victim");	end;
 			def cmd_xssf_active_victims	(*args);	show_table("Victims", DBManager::XssfVictim, ["active = ?", true], ["first_request", "last_request", "tunneled", "current_attack_url", "location", "os_name", "os_version", "arch"]); 	print_status("Use xssf_information [VictimID] to see more information about a victim");	end;
+		end # CommandDispatcher
+		
+		def initialize(framework, opts)
+			super
+
+			clean_database;	Msf::Xssf::AUTO_ATTACKS.clear
+
+			@DefaultPort = Msf::Xssf::SERVER_PORT;		@DefaultUri  = Msf::Xssf::SERVER_URI;	@defaultPublic = false;	@defaultMode = 'Normal';
+
+			# Check if parameters are correct if entered
+			opts['Port'].to_s 	=~ /^(6553[0-5]|655[0-2]\d|65[0-4]\d\d|6[0-4]\d{3}|[1-5]\d{4}|[1-9]\d{0,3}|0)$/ ? port = Integer(opts['Port']) : port = @DefaultPort
+			opts['Uri'].to_s  	=~ /^\/?([a-zA-Z0-9\-\._\?\,\'\/\\\+&amp;%\$#\=~])+$/ ? uri = opts['Uri'].to_s : uri = @DefaultUri
+			
+			opts['Public'].to_s =~ /^true$/ ? Msf::Xssf::XSSF_PUBLIC[0] = true : Msf::Xssf::XSSF_PUBLIC[0] = @DefaultPublic
+			
+			opts['Mode'].to_s =~ /^(Quiet|Normal|Verbose|Debug)$/i ? Msf::Xssf::XSSF_MODE[0] = $1 : Msf::Xssf::XSSF_MODE[0] = @DefaultMode
+			
+			uri = '/' + uri if (uri[0].chr  != "/")
+			uri = uri + '/' if (uri[-1].chr != "/")	
+
+			if (not framework.db.active)
+				print_error("The database backend has not been initialized ...")
+				print_status("Please connect MSF to an installed database before loading XSSF !")
+				raise PluginLoadError.new("Failed to connect to the database.")
+			end
+
+			framework.plugins.each { |p| raise PluginLoadError.new("This plugin should not be loaded more than once") if (p.class == Msf::Plugin::Xssf)	}
+			
+			begin
+				raise "Database Busy..." if not start(port, uri)
+				# Add Lib
+				$:.unshift(File.join(File.dirname(__FILE__),"xssf","lib"))
+
+				# Add Modules & update module cache
+				framework.modules.add_module_path(File.join(File.dirname(__FILE__),"xssf","modules")).each do |m|
+					print_good("Added #{m.last} #{m.first.capitalize} modules for Xssf Plugin")
+				end
+				framework.threads.spawn('RebuildCache', true) { framework.db.update_all_module_details }
+
+  				# Add Console Command Dispatcher
+				add_console_dispatcher(XssfCommandDispatcher)
+				print_error("Your Ruby version is #{RUBY_VERSION.to_s}. Make sure your version is up-to-date with the last non-vulnerable version before using XSSF!\n\n")
+				print_line("%cya" + Xssf::XssfBanner.to_s + "%clr\n\n")
+
+				print_good("Please use command 'xssf_urls' to see useful XSSF URLs")
+			rescue
+				raise PluginLoadError.new("Error starting server: #{$!}")
+			end
+		end
+
+		#
+		# Removes the console menus created by the plugin
+		#
+		def cleanup
+			stop
+			remove_console_dispatcher('xssf')
+			$:.delete_if {|e| e =~ /xssf\/lib/}
+	 	 	framework.modules.remove_module_path(File.join(File.dirname(__FILE__),"xssf","modules"))
+	 	 	framework.threads.spawn('RebuildCache', true) { framework.db.update_all_module_details }
 		end
 		
+		#
+		# This method returns a short, friendly name for the plugin.
+		#
+		def name
+			"xssf"
+		end
+
+		#
+		# Returns description of the plugin (60 chars max)
+		#
+		def desc
+			"XSS Framework managing XSS modules"
+		end
 	protected
 	end
 end

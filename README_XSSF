@@ -1,3 +1,20 @@
 ##### HELP ABOUT XSSF #####
 
 PLEASE READ ONLINE HELP AT ./data/xssf/gui/help.html or use command xssf_help once you loaded XSSF pluggin
+
+##### This fork is maintained by RageLtMan of Semper Victus #####
+
+##
+# Conversion Notes:
+# renamed command dispatcher
+# configured load paths for plugin/xssf to hold lib and modules
+#  this required a bit of hackery since Msf::Xssf namespace is loaded before we can $:.unshift the lib dir
+# simplified lib paths and rewrote require statements in modules to match
+##
+
+##
+# Conversion TODO:
+# convert the model stuff into Mdm format
+# convert XSSF server into an auxiliary/server/xssf module
+#  allow for easy starts on new hosts, standardized config, and adding the XSS loop as a resource to existing servers a la browser autopwn
+##
