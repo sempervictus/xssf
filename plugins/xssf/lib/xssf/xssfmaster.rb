@@ -22,7 +22,7 @@ module Msf
 			def start(port, uri)	
 				self.serverURI  = uri
 				self.serverPort = port
-				self.serverHost = Rex::Socket.source_address('1.2.3.4')
+				self.serverHost = '127.0.0.1' # Rex::Socket.source_address('1.2.3.4')
 				
 				self.server  = WEBrick::HTTPServer.new(
 					:Port				=> port,
@@ -46,7 +46,7 @@ module Msf
 				# Starting GUI and Proxy server
 				begin
 					self.attacker_srv  = WEBrick::HTTPServer.new(
-						:BindAddress 		=> XSSF_PUBLIC[0] ? '0.0.0.0' : '127.0.0.1',
+						:BindAddress 		=> '127.0.0.1', #XSSF_PUBLIC[0] ? '0.0.0.0' : '127.0.0.1',
 						:Port				=> port.to_i + 1,
 						:Logger				=> WEBrick::Log.new($stdout, WEBrick::Log::FATAL),
 						:ServerSoftware 	=> "XSSF " + XSSF_VERSION,

